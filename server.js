@@ -4,6 +4,8 @@ const server = express();
 
 server.use(express.json());
 
+// Returns all tasks and their corresponding project information
+
 server.get('/api/tasks', async (req, res) => {
   try {
     const tasks = await DB.findTasks();
@@ -14,6 +16,8 @@ server.get('/api/tasks', async (req, res) => {
   }
 });
 
+// Returns all projects, tasks, or resources
+
 server.get('/api/:table', async (req, res) => {
   const targetTable = req.params.table;
   try {
@@ -23,6 +27,8 @@ server.get('/api/:table', async (req, res) => {
     res.status(500).json(err);
   }
 });
+
+// Returns the row from the table of choice by ID
 
 server.get('/api/:table/:id', async (req, res) => {
   const targetTable = req.params.table;
@@ -35,12 +41,13 @@ server.get('/api/:table/:id', async (req, res) => {
   }
 });
 
+// Posts a new entry to table of choice
+
 server.post('/api/:table', async (req, res) => {
   const postbody = req.body;
   const targettable = req.params.table;
   try {
     const posted = await DB.add(targettable, postbody);
-    res.status(200).json(posted);
   } catch (err) {
     res.status(500).json(err);
   }
@@ -48,15 +55,26 @@ server.post('/api/:table', async (req, res) => {
 
 module.exports = server;
 
-function booleanBuster(allEntries, res) {
+// Function checks response for any "completed" key in object and converts boolean
+// from "0 or 1" to "False or True"
+
+async function booleanBuster(allEntries, res) {
   if (allEntries[0].hasOwnProperty('completed')) {
-    const boolEntries = allEntries.map((entry) => {
+    const boolEntries = await allEntries.map((entry) => {
       if (entry.completed == '0') {
         return { ...entry, completed: false };
       }
       return { ...entry, completed: true };
     });
-    res.status(200).json(boolEntries);
+    try {
+      res.status(200).json(boolEntries);
+    } catch (err) {
+      res.status(500).json(err);
+    }
   }
-  res.status(200).json(allEntries);
+  try {
+    res.status(200).json(allEntries);
+  } catch (err) {
+    res.status(500).json(err);
+  }
 }
